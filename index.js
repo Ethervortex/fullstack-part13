@@ -10,6 +10,14 @@ app.use(express.json())
 
 app.use('/api/blogs', blogsRouter)
 
+const errorHandler = (error, request, response, next) => {
+  response.status(error.status || 500).json({
+    error: error.message || 'Internal Server Error'
+  })
+}
+
+app.use(errorHandler)
+
 const start = async () => {
   await connectToDatabase()
   app.listen(PORT, () => {

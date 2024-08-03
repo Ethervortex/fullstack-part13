@@ -13,13 +13,14 @@ router.get('/', async (req, res) => {
     res.json(blogs)
   })
   
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   console.log(req.body)
   try {
     const blog = await Blog.create(req.body)
     res.json(blog)
   } catch(error) {
-    return res.status(400).json({ error })
+    console.log('Error creating blog')
+    next(error)
   }
 })
 
@@ -36,7 +37,7 @@ router.get('/:id', blogFinder, async (req, res) => {
   }
 })
 
-router.put('/:id', blogFinder, async (req, res) => {
+router.put('/:id', blogFinder, async (req, res, next) => {
   try {
     if (req.blog) {
       const { likes } = req.body
@@ -48,7 +49,7 @@ router.put('/:id', blogFinder, async (req, res) => {
     }
   } catch (error) {
     console.error('Error increasing likes:', error)
-    res.status(500).json({ error: 'Error increasing likes' })
+    next(error)
   }
 })
 
