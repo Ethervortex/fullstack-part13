@@ -14,7 +14,6 @@ const blogFinder = async (req, res, next) => {
 
 const tokenExtractor = (req, res, next) => {
   const authorization = req.get('authorization')
-  console.log('authorization:', authorization.substring(7))
   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
     try {
       req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
@@ -29,7 +28,6 @@ const tokenExtractor = (req, res, next) => {
 }
 
 router.get('/', async (req, res) => {
-  //const blogs = await Blog.findAll()
   const blogs = await Blog.findAll({
     attributes: { exclude: ['userId'] },
     include: {
@@ -43,9 +41,6 @@ router.get('/', async (req, res) => {
   
 router.post('/', tokenExtractor, async (req, res) => {
   console.log(req.body)
-  //const blog = await Blog.create(req.body)
-  //const user = await User.findOne()
-  //const blog = await Blog.create({...req.body, userId: user.id})
   const user = await User.findByPk(req.decodedToken.id)
   const blog = await Blog.create({...req.body, userId: user.id, date: new Date()})
   res.json(blog)
@@ -62,7 +57,10 @@ router.put('/:id', blogFinder, async (req, res) => {
   res.json(req.blog)
 })
 
-router.delete('/:id', blogFinder, async (req, res) => {
+router.delete('/:id', tokenExtractor, blogFinder, async (req, res) => {
+  if (req.blog.userId !== req.decodedToken.id) {
+    return res.status(403).json({ error: 'Delete denied' })
+  }
   await req.blog.destroy()
   res.status(204).end()
 })
