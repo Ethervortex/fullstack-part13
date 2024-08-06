@@ -1,5 +1,4 @@
 const router = require('express').Router()
-
 const { User, Blog } = require('../models')
 
 router.get('/', async (req, res) => {
@@ -18,9 +17,37 @@ router.post('/', async (req, res) => {
 })
 
 router.get('/:id', async (req, res) => {
-  const user = await User.findByPk(req.params.id)
+  //const user = await User.findByPk(req.params.id)
+  const user = await User.findByPk(req.params.id, {
+    include: [
+      {
+        model: Blog,
+        attributes: ['title', 'url', 'author', 'likes']
+      },
+      {
+        model: Blog,
+        as: 'readings',
+        attributes: ['id', 'url', 'title', 'author', 'likes', 'year'],
+        through: {
+          attributes: []
+        }
+      }
+    ]
+  })
   if (user) {
-    res.json(user)
+    const userWithoutSensitiveData = {
+      name: user.name,
+      username: user.username,
+      readings: user.readings.map(reading => ({
+        id: reading.id,
+        url: reading.url,
+        title: reading.title,
+        author: reading.author,
+        likes: reading.likes,
+        year: reading.year
+      }))
+    }
+    res.json(userWithoutSensitiveData)
   } else {
     res.status(404).end()
   }

@@ -1,9 +1,9 @@
 const router = require('express').Router()
-
 const { Blog, User } = require('../models')
 const { SECRET } = require('../util/config')
 const jwt = require('jsonwebtoken')
 const { Op } = require('sequelize')
+const { tokenExtractor } = require('../util/middleware')
 
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id)
@@ -12,7 +12,7 @@ const blogFinder = async (req, res, next) => {
   }
   next()
 }
-
+/*
 const tokenExtractor = (req, res, next) => {
   const authorization = req.get('authorization')
   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
@@ -27,7 +27,7 @@ const tokenExtractor = (req, res, next) => {
   }
   next()
 }
-
+*/
 router.get('/', async (req, res) => {
   const where = {}
 
