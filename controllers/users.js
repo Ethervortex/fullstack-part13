@@ -73,4 +73,21 @@ router.put('/:username', async (req, res) => {
     }
 })
 
+/* Testing route: update disabled status:
+router.put('/status/:id', async (req, res) => {
+  const { id } = req.params
+  const { disabled } = req.body
+  const user = await User.findByPk(id)
+  console.log('Id:', id)
+
+  if (user) {
+    user.disabled = disabled
+    await user.save()
+    res.json(user)
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
+})
+*/
+
 module.exports = router
