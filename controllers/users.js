@@ -17,6 +17,13 @@ router.post('/', async (req, res) => {
 })
 
 router.get('/:id', async (req, res) => {
+  const { read } = req.query;
+
+  let readStatus = {};
+  if (read !== undefined) {
+    readStatus = { read: read === 'true' };
+  }
+
   const user = await User.findByPk(req.params.id, {
     attributes: {
       exclude: [
@@ -38,26 +45,12 @@ router.get('/:id', async (req, res) => {
       },
       through: {
         attributes: ['read', 'id'],
-        as: 'readinglists'
+        as: 'readinglists',
+        where: readStatus
       }
     }
   })
   if (user) {
-    /*
-    const userWithoutSensitiveData = {
-      name: user.name,
-      username: user.username,
-      readings: user.readings.map(reading => ({
-        id: reading.id,
-        url: reading.url,
-        title: reading.title,
-        author: reading.author,
-        likes: reading.likes,
-        year: reading.year
-      }))
-    }
-    res.json(userWithoutSensitiveData)
-    */
     res.json(user)
   } else {
     res.status(404).end()
