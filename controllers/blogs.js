@@ -1,9 +1,7 @@
 const router = require('express').Router()
 const { Blog, User } = require('../models')
-const { SECRET } = require('../util/config')
-//const jwt = require('jsonwebtoken')
 const { Op } = require('sequelize')
-const { tokenExtractor } = require('../util/middleware')
+const { tokenExtractor, checkSession } = require('../util/middleware')
 
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id)
@@ -44,9 +42,11 @@ router.get('/', async (req, res) => {
   res.json(blogs)
 })
   
-router.post('/', tokenExtractor, async (req, res) => {
-  console.log(req.body)
+router.post('/', tokenExtractor, checkSession, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
+  if (user.disabled) {
+    return res.status(401).json({ error: 'User is disabled' })
+  }
   const blog = await Blog.create({...req.body, userId: user.id, date: new Date()})
   res.json(blog)
 })
@@ -62,7 +62,11 @@ router.put('/:id', blogFinder, async (req, res) => {
   res.json(req.blog)
 })
 
-router.delete('/:id', tokenExtractor, blogFinder, async (req, res) => {
+router.delete('/:id', tokenExtractor, checkSession, blogFinder, async (req, res) => {
+  const user = await User.findByPk(req.decodedToken.id)
+  if (user.disabled) {
+    return res.status(401).json({ error: 'User is disabled' })
+  }
   if (req.blog.userId !== req.decodedToken.id) {
     return res.status(403).json({ error: 'Delete denied' })
   }

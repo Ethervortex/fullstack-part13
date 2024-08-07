@@ -1,13 +1,16 @@
 const router = require('express').Router()
 const { ReadingList, Blog, User } = require('../models')
-const { tokenExtractor } = require('../util/middleware')
+const { tokenExtractor, checkSession } = require('../util/middleware')
 
-router.post('/', tokenExtractor, async (req, res) => {
+router.post('/', tokenExtractor, checkSession, async (req, res) => {
   const { blogId, userId } = req.body
 
   const user = await User.findByPk(userId)
   const blog = await Blog.findByPk(blogId)
-
+  
+  if (user.disabled) {
+    return res.status(401).json({ error: 'User is disabled' })
+  }
   if (!user || !blog) {
     return res.status(400).json({ error: 'Invalid user or blog_id' })
   }
@@ -16,11 +19,16 @@ router.post('/', tokenExtractor, async (req, res) => {
   res.status(201).json(readingListAdd)
 })
 
-router.put('/:id', tokenExtractor, async (req, res) => {
+router.put('/:id', tokenExtractor, checkSession, async (req, res) => {
   const { id } = req.params
   const { read } = req.body
   const userId = req.decodedToken.id
   const entry = await ReadingList.findByPk(id)
+
+  const user = await User.findByPk(userId)
+  if (user.disabled) {
+    return res.status(401).json({ error: 'User is disabled' })
+  }
 
   if (!entry) {
     return res.status(404).json({ error: 'Entry not found' })
